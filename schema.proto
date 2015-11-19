@@ -1,0 +1,915 @@
+package ce.nbapi;
+option java_package = "com.aruba.ale.proto";
+
+// Common enums
+
+// Access Categories
+enum data_prio {
+    DATA_PRIO_BK = 0;                // Back
+    DATA_PRIO_BE = 1;                // Best
+    DATA_PRIO_VI = 2;                // Vide
+    DATA_PRIO_VO = 3;                // Voic
+}
+
+// Traffic type
+enum traffic_type {
+    DATA_TRAFFIC_TYPE_BCAST = 0;     // Broa
+    DATA_TRAFFIC_TYPE_MCAST = 1;     // Mult
+    DATA_TRAFFIC_TYPE_UCAST = 2;     // Unic
+}
+
+// HT Mode
+enum ht_type {
+    HTT_NONE = 0;
+    HTT_20MZ = 1;
+    HTT_40MZ = 2;
+    HTT_VHT_20MZ = 3;
+    HTT_VHT_40MZ = 4;
+    HTT_VHT_80MZ = 5;
+}
+ 
+// Phy Type
+enum phy_type {
+    PHY_TYPE_80211B = 0;  
+    PHY_TYPE_80211A = 1; 
+    PHY_TYPE_80211G = 2;
+}
+
+enum measurement_unit {
+     METERS = 0;
+     FEET = 1;
+     PIXELS = 2;
+}
+
+// Common objects
+
+message ip_address {
+        enum addr_family {
+             ADDR_FAMILY_UNSPEC = 0; 
+             ADDR_FAMILY_INET = 2;   // Internet IP Protocol
+             ADDR_FAMILY_INET6 = 10; // IP version 6
+        }
+        required addr_family af = 1;
+        required bytes addr = 2;
+}
+
+message mac_address {
+        required bytes addr = 1; // 6 bytes
+}
+
+// Data Rate Stats message
+message data_rate_stats {
+    optional uint32 rate = 1;
+    optional uint32 tx_frame_count = 2;
+    optional uint32 tx_byte_count = 3;
+    optional uint32 rx_frame_count = 4;
+    optional uint32 rx_byte_count = 5;
+}
+
+// Per AC Stats message
+message data_prio_stats {
+    optional data_prio prio = 1;
+    optional uint32 tx_frame_count = 2;
+    optional uint32 rx_frame_count = 3;
+    optional uint32 tx_drop_count = 4;
+}
+
+// Per Data Traffic Stats message
+message data_traffic_type_stats {
+    optional traffic_type type = 1;
+    optional uint32 tx_frame_count = 2;
+    optional uint32 rx_frame_count = 3;
+}
+
+// AP Neighbor message
+message ap_neighbor {
+    enum network_type {
+        INFRASTRUCTURE = 0;
+        ADHOC = 1;
+    }
+
+    optional mac_address ap_eth_mac = 1;
+    optional mac_address bssid = 2;
+    optional phy_type phy = 3;
+    optional mac_address neighbor_bssid = 4;
+    optional string neighbor_ssid = 5;
+    optional network_type neighbor_network = 6;
+    optional uint32 neighbor_channel = 7;
+    // optional ht_type neighbor_ht = 8;
+    // optional uint32 path_loss = 9;
+    optional uint32 neighbor_rssi = 10;
+}
+
+// Utilization/Histogram Stat
+message util_stats {
+    // Histogram/Utilization Stat Type
+    enum util_stat_type {
+        UTIL_STAT_TYPE_CHANNEL = 0;
+        UTIL_STAT_TYPE_CHANNEL_TX = 1;
+        UTIL_STAT_TYPE_CHANNEL_RX = 2;
+        UTIL_STAT_TYPE_QUEUE_SWTX = 3;
+        UTIL_STAT_TYPE_QUEUE_BE = 4;
+        UTIL_STAT_TYPE_QUEUE_BK = 5;
+        UTIL_STAT_TYPE_QUEUE_VI = 6;
+        UTIL_STAT_TYPE_QUEUE_VO = 7;
+        UTIL_STAT_TYPE_QUEUE_BCMC = 8;
+        UTIL_STAT_TYPE_QUEUE_ATIM = 9;
+    }
+
+    optional util_stat_type type = 1;
+    optional uint32 bucket1 = 2;
+    optional uint32 bucket2 = 3;
+    optional uint32 bucket3 = 4;
+    optional uint32 bucket4 = 5;
+    optional uint32 bucket5 = 6;
+    optional uint32 max = 7;
+    optional uint32 min = 8;
+    optional uint32 curr = 9;
+    // The AMON message uses 1 byte for each stat above (totally 8 bytes)
+    // Each gets encoded into uint32 fields in protobuf. In case this is
+    // found suboptimal, we can use the next field to pass the 64bit value
+    // received from AMON as is. Till then, this field will not be populated
+    // in the final feed.
+    optional uint64 stat = 10;
+}
+
+// Main objects
+
+message location {
+        enum algorithm {
+             ALGORITHM_TRIANGULATION = 0;
+             ALGORITHM_AP_PLACEMENT = 1;
+             ALGORITHM_CALIBRATION = 2;
+             ALGORITHM_ESTIMATION = 3;
+             ALGORITHM_LOW_DENSITY = 4;
+        }
+        optional mac_address sta_eth_mac = 1;
+        optional float sta_location_x = 2;
+        optional float sta_location_y = 3;
+        optional uint32 error_level = 7;
+        optional bool associated = 8;
+        optional bytes campus_id = 9;
+        optional bytes building_id = 10;
+        optional bytes floor_id = 11;
+        optional bytes hashed_sta_eth_mac = 12;
+        repeated bytes geofence_ids = 13;
+        optional algorithm loc_algorithm = 14;
+	    optional uint32 rssi_val = 15;
+        optional double longitude = 16;
+        optional double latitude = 17;
+        optional double altitude = 18;
+        optional measurement_unit unit = 19;
+}
+
+message presence {
+        optional mac_address sta_eth_mac = 1;
+        optional bool associated = 2;
+        optional bytes hashed_sta_eth_mac = 3;
+	optional string ap_name = 4;
+        optional mac_address radio_mac = 5;
+}
+
+message rssi {
+        optional mac_address sta_eth_mac = 1;
+        optional mac_address radio_mac = 2;
+        optional uint32 rssi_val = 3;
+        optional bool associated = 4;
+        optional bytes hashed_sta_eth_mac = 5;
+}
+
+message sta_rssi {
+        optional mac_address sta_eth_mac = 1;
+        optional mac_address radio_mac = 2;
+        optional sint32 rssi_val = 3;
+        optional bool associated = 4;
+        optional int32 age = 5;
+        optional int32 noise_floor = 6;
+        optional mac_address assoc_bssid = 7;
+}
+
+message ap_rssi {
+        optional mac_address ap_eth_mac = 1;
+        optional mac_address neighbor_bssid = 2;
+        optional string ssid = 3;
+        optional sint32 rssi_val = 4;
+        optional uint32 phy_type = 5;
+        optional uint32 ht_mode = 6;
+        optional uint32 channel = 7;
+        optional uint32 tx_power = 8;
+        optional int64 bw_rate = 9;
+        optional mac_address bssid = 10;
+}
+
+message station {
+        optional mac_address sta_eth_mac = 1;
+        optional string username = 2;
+        optional string role = 3;
+        optional mac_address bssid = 4;
+        optional string device_type = 5;
+        optional ip_address sta_ip_address = 6;
+        optional bytes hashed_sta_eth_mac = 7;
+        optional bytes hashed_sta_ip_address = 8;
+        optional uint32 vlan = 9;
+        optional ht_type ht = 10;
+	optional string ap_name = 11;
+}
+
+message access_point {
+        enum deployment_mode {
+             DEPLOYMENT_MODE_CAMPUS = 0;
+             DEPLOYMENT_MODE_REMOTE = 1;
+        }
+        required mac_address ap_eth_mac = 1;
+        optional string ap_name = 2;
+        optional string ap_group = 3;
+        optional string ap_model = 4;
+        optional deployment_mode depl_mode = 5;
+        optional ip_address ap_ip_address = 6;
+        optional uint32 reboots = 7;
+        optional uint32 rebootstraps = 8;
+        optional ip_address managed_by = 9;
+        optional string managed_by_key = 10;
+        repeated radio radios = 11;
+
+}
+
+message radio {
+        enum radio_mode {
+             RADIO_MODE_AP = 0;
+             RADIO_MODE_MESH_PORTAL = 1; 
+             RADIO_MODE_MESH_POINT = 2;
+             RADIO_MODE_AIR_MONITOR = 3;
+             RADIO_MODE_SPECTRUM_SENSOR = 4;
+             RADIO_MODE_UNKNOWN = 5;
+        }
+
+        optional mac_address ap_eth_mac = 1;
+        required mac_address radio_bssid = 2;
+        optional radio_mode mode = 4;
+        optional phy_type phy = 5;
+        optional ht_type ht = 6;
+        repeated virtual_access_point virtual_access_points = 7;
+}
+
+message virtual_access_point {
+        required mac_address bssid = 1;
+        optional string ssid = 2;
+        optional mac_address radio_bssid = 3;
+}
+
+message destination {
+        optional ip_address dest_ip = 1;
+        optional string dest_name = 2;
+        optional string dest_alias_name = 3;
+}
+
+message application {
+        optional uint32 app_id = 1;
+        optional string app_name = 2;
+        optional string app_family = 3;
+        optional string app_long_name = 4;
+}
+
+message webcc_category {
+        optional uint32 cat_id = 1;
+        optional string category = 2;
+}
+
+message webcc_info {
+    optional bytes webcc_md5 = 1; //16 bytes md5 cksum
+    optional uint32 webcc_cat_id = 2;
+    optional uint32 webcc_rep_score = 3;
+    optional string webcc_url_prefix = 4;
+    optional bool webcc_not_supported = 5;
+}
+
+message visibility_rec {
+        enum ip_protocol {
+             IP_PROTOCOL_VAL_6 = 6;
+             IP_PROTOCOL_VAL_17 = 17;
+        }
+        optional ip_address client_ip = 1;//(iap)
+        optional ip_address dest_ip = 2;//(iap)
+        optional ip_protocol ip_proto = 3;
+        optional uint32 app_id = 4;//(iap)
+        optional uint64 tx_pkts = 5;
+        optional uint64 tx_bytes = 6;//(iap)
+        optional uint64 rx_pkts = 7;
+        optional uint64 rx_bytes = 8;//(iap)
+        optional bytes hashed_client_ip = 9;
+        optional mac_address device_mac = 10;//(iap)
+        optional bytes hashed_device_mac = 11;
+        optional string app_name = 12;
+	optional uint32 cc_cat_id = 13; //(iap)
+	optional uint32 cc_rep_score = 14;//(iap)
+	optional string cc_url_prefix = 15;
+        optional bytes cc_md5 = 16; // Webroot md5 of the webcc_url_prefix
+                                    // use this as index into webcc_info
+        optional mac_address ap_mac = 17;
+}
+
+message campus {
+    optional bytes campus_id = 1; // 16 bytes id
+    optional string campus_name = 2;
+}
+
+message building {
+    optional bytes building_id = 1; // 16 bytes id
+    optional string building_name = 2;
+    optional bytes campus_id = 3;  // 16 bytes id
+}
+
+message floor {
+    optional bytes floor_id = 1; // 16 bytes id
+    optional string floor_name = 2;
+    optional float floor_latitude = 3;
+    optional float floor_longitude = 4;
+    optional string floor_img_path = 5;
+    optional float floor_img_width = 6;
+    optional float floor_img_length = 7;
+    optional bytes building_id = 8; // 16 bytes id
+    optional float floor_level = 9;
+    optional string units = 10;
+    optional float grid_size = 11;
+}
+
+message point {
+    optional float x = 1;
+    optional float y = 2;
+}
+
+message geofence {
+    optional bytes floor_id = 1; // 16 bytes id
+    optional bytes geofence_id = 2; // 16 bytes id
+    optional string geofence_name = 3;
+    optional string type = 4;
+    repeated point point_list = 5;
+}
+
+message geofence_notify {
+        enum zone_event {
+             ZONE_IN = 0;
+             ZONE_OUT = 1;
+        }
+        optional zone_event geofence_event = 1;
+        optional bytes geofence_id = 2;
+        optional string geofence_name = 3;
+        optional mac_address sta_mac = 4;
+        optional bool associated = 5;
+        optional uint32 dwell_time = 6 [default=0];
+        repeated group Access_point_info = 7 {
+                 optional mac_address ap_mac = 8;
+                 optional string ap_name = 9;
+                 optional mac_address radio_bssid = 10;
+                 optional uint32 rssi_val = 11;
+        }
+        optional bytes hashed_sta_mac = 30;
+}
+
+// Per Radio Statistics
+message stats_radio {
+    enum radio_mode {
+        RADIO_MODE_AP = 0;
+        RADIO_MODE_MESH_PORTAL = 1; 
+        RADIO_MODE_MESH_POINT = 2;
+        RADIO_MODE_AIR_MONITOR = 3; 
+        RADIO_MODE_SPECTRUM_SENSOR = 4;
+        RADIO_MODE_UNKNOWN = 5;
+    }
+    
+    // MAC address of the Access Point
+    optional mac_address ap_eth_mac = 1;
+
+    // Radio Interface Number on the given AP (0, 1)
+    optional uint32 radio_number = 2;
+
+    // Assigned Channel for the Radio
+    optional uint32 channel = 3;
+
+    // 802.11 Phy type (a/b/g)
+    optional phy_type phy = 4;
+
+    // Configured Mode Radio (ap/mesh/monitor)
+    optional radio_mode mode = 5;
+
+    // Instantaneous Noise Floor for the given radio
+    optional uint32 noise_floor = 7;
+
+    // Instantaneous TX Power LEvel for the given radio
+    optional uint32 tx_power = 8;
+
+    // Instantaneous Channel Utilization for the given radio
+    optional uint32 channel_utilization = 9;
+
+    // Instantaneous RX Channel Utilization for the given radio
+    optional uint32 rx_channel_utilization = 10;
+
+    // Instantaneous TX Channel Utilization for the given radio
+    optional uint32 tx_channel_utilization = 11;
+
+    // Cumulative count of all 802.11 frames received for transmission
+    optional uint32 tx_received = 12;
+
+    // Cumulative count of all 802.11 frames transmitted
+    optional uint32 tx_transmitted = 13;
+
+    // Cumulative count of all 802.11 frames dropped
+    optional uint32 tx_dropped = 14;
+
+    // Cumulative count of 802.11 data frames received for transmission
+    optional uint32 tx_data_received = 15;
+
+    // Cumulative count of 802.11 data frames transmitted
+    optional uint32 tx_data_transmitted = 16;
+
+    // Cumulative count of 802.11 data frames retried
+    optional uint32 tx_data_retried = 17;
+
+    // Cumulative count of all 802.11 frames received
+    optional uint32 rx_frames = 18;
+
+    // Cumulative count of all 802.11 frames retried
+    optional uint32 rx_retried = 19;
+
+    // Cumulative count of data 802.11 frames received
+    optional uint32 rx_data_frames = 20;
+
+    // Cumulative count of data 802.11 frames received
+    optional uint32 rx_data_retried = 21;
+
+    // Frames that Radio couldn't decode
+    optional uint32 rx_frame_errors = 22;
+
+    // Data Traffic Type stats
+    repeated data_traffic_type_stats traffic_stats = 23;
+
+    // Priority Stats
+    repeated data_prio_stats prio_stats = 24;
+
+    // Data Rate Bucket stats
+    repeated data_rate_stats rate_stats = 25;
+
+    // Actual EIRP
+    optional uint32 actual_eirp = 26;
+
+	// Radio Mac address (IAP)
+	optional mac_address radio_mac = 27;
+
+	// Trasmitted data in bytes (IAP)
+	optional uint64 tx_data_bytes = 28;
+
+	// recieved data in bytes (IAP)
+	optional uint64 rx_data_bytes = 29;
+
+	// 2.4 or 5 g band (IAP)
+	optional uint32 radio_band = 30;
+
+	// channel bust (IAP)
+	optional uint32 channel_busy_64 = 31;
+}
+
+// VAP Stats Message
+message stats_vap {
+    // MAC address of the Access Point
+    optional mac_address ap_eth_mac = 1;
+
+    // BSSID of the VAP
+    optional mac_address bssid = 2;
+
+    // Cumulative count of all 802.11 frames received for transmission
+    optional uint32 tx_received = 5;
+
+    // Cumulative count of all 802.11 frames transmitted
+    optional uint32 tx_transmitted = 6;
+
+    // Cumulative count of all 802.11 frames dropped
+    optional uint32 tx_dropped = 7;
+
+    // Cumulative count of data 802.11 frames received for transmission
+    optional uint32 tx_data_received = 8;
+
+    // Cumulative count of data 802.11 frames transmitted
+    optional uint32 tx_data_transmitted = 9;
+
+    // Cumulative count of data 802.11 frames retried
+    optional uint32 tx_data_retried = 10;
+
+    // Cumulative count of all 802.11 frames received
+    optional uint32 rx_frames = 18;
+
+    // Cumulative count of all 802.11 frames retried
+    optional uint32 rx_retried = 19;
+
+    // Cumulative count of data 802.11 frames received
+    optional uint32 rx_data_frames = 11;
+
+    // Cumulative count of data 802.11 frames received
+    optional uint32 rx_data_retried = 12;
+
+    // Data Traffic Type stats
+    repeated data_traffic_type_stats traffic_stats = 23;
+
+    // Priorty (AC) stats for this station
+    repeated data_prio_stats prio_stats = 13;
+
+    // Data Rate Bucket stats for this station
+    repeated data_rate_stats rate_stats = 14;
+}
+
+// Station Stats Message
+message stats_station {
+    // MAC address of the Station (both)
+    optional mac_address sta_eth_mac = 1;
+
+    // MAC address of the AP this station is asso (controller)
+    optional mac_address ap_eth_mac = 2;
+
+    // BSSID this station is associated with (controller)
+   optional mac_address bssid = 3;
+
+    // Signal strength (both)
+    optional uint32 snr = 4;
+
+    // Cumulative count of all 802.11 frames rece(controller)
+    optional uint32 tx_received = 5;
+
+    // Cumulative count of all 802.11 frames tran(controller)
+    optional uint32 tx_transmitted = 6;
+
+    // Cumulative count of all 802.11 frames drop(controller)
+    optional uint32 tx_dropped = 7;
+
+    // Cumulative count of data 802.11 frames rec(controller)
+    optional uint32 tx_data_received = 8;
+
+    // Cumulative count of data 802.11 frames tra(controller)
+    optional uint32 tx_data_transmitted = 9;
+
+    // Cumulative count of data 802.11 frames ret(controller)
+    optional uint32 tx_data_retried = 10;
+
+    // Cumulative count of data 802.11 frames rec(controller)
+    optional uint32 rx_data_received = 11;
+
+    // Cumulative count of data 802.11 frames rec(controller)
+    optional uint32 rx_data_retried = 12;
+
+    // Priorty (AC) stats for this station(controller)
+    repeated data_prio_stats prio_stats = 13;
+
+    // Data Rate Bucket stats for this station(controller)
+    repeated data_rate_stats rate_stats = 14;
+
+	// Application usage of the station(iap)
+	optional uint32	speed = 15;
+
+	// Station connected data rate for rec(iap)
+	optional uint64 rx_rate = 16;
+
+	// Station connected data rate for trans(iap)
+	optional uint64 tx_rate = 17;
+
+	// Station traffic passed for rec(iap)
+	optional uint64 rx_data_bytes = 18;
+
+	// Station traffic passed for trans(iap)
+	optional uint64 tx_data_bytes = 19;
+
+	// Number of SSID up or number of VAPs(iap)
+	optional uint32 ssid_up = 20;
+
+	// Number of Rouge seen(iap)
+	// optional uint32 rougue_ap = 21;
+
+}
+
+message state_station {
+    // MAC address of the Station(iap)
+    optional mac_address sta_eth_mac = 1;
+
+    // MAC address of the AP this station is asso(iap)
+    optional mac_address ap_eth_mac = 2;
+
+    // Signal strength(iap)
+    optional uint32 snr = 3;
+
+	// Station retry count for rec(iap)
+	optional uint32 rx_tries = 4;
+
+	// Station retry count for trans(iap)
+	optional uint32 tx_tries = 5;
+
+	// Station Phy_type(iap)
+	optional phy_type phy_type = 6;
+
+	// Set security op_mode(iap)
+	optional uint32 security_type = 7;
+
+
+}
+// AP Neighbor List
+message ap_neighbor_list {
+    // AP Neighbor List
+    repeated ap_neighbor neighbor = 1;
+}
+
+// Per Radio Utilization/Histogram Statistics
+message utilization_stats_radio {
+    // MAC Address of the Access Point
+    optional mac_address ap_eth_mac = 1;
+
+    // Radio Interface Number on the given AP (0,
+    optional uint32 radio_number = 2;
+
+    // List of all the Utilization Stats
+    repeated util_stats ustats = 3;
+}
+
+message proximity {
+        optional mac_address sta_eth_mac = 1;
+        optional mac_address radio_mac = 2;
+        optional int32 rssi_val = 3;
+        optional string ap_name = 4;
+	optional bytes hashed_sta_eth_mac = 5;
+}
+
+// Security related messages START
+message dot1x {
+    optional uint64 start_timestamp  = 1;
+    optional uint64 finish_timestamp = 2;
+    optional mac_address station_mac = 3;
+    optional string username         = 4;
+    optional mac_address bssid       = 5;
+    optional uint32 result            = 6;
+    optional uint32 reason            = 7;
+    optional uint32 server_retry_cnt  = 8;
+    optional uint32 client_retry_cnt  = 9;
+    optional ip_address serverip     = 10;
+    optional uint32 srvr_elapsed_time= 11;
+    optional uint32 clnt_elapsed_time= 12;
+}
+
+message wpa_key_handshake {
+    optional uint64 start_timestamp         = 1;
+    optional uint64 finish_timestamp        = 2;
+    optional mac_address station_mac        = 3;
+    optional mac_address bssid              = 4;
+    optional uint32 result                   = 5;
+    optional uint32 trigger_reason           = 6;
+    optional uint32 reason                   = 7;
+    optional uint32 key1_retry_cnt           = 8;
+    optional uint32 key3_retry_cnt           = 9;
+    optional uint32 replay_counter_mismatch = 10;
+}
+
+message captive_portal {
+    optional uint64 start_timestamp  = 1;
+    optional uint64 finish_timestamp = 2;
+    optional mac_address station_mac = 3;
+    optional string username         = 4;
+    optional mac_address bssid       = 5;
+    optional uint32 result            = 6;
+    optional uint32 reason            = 7;
+    optional uint32 server_retry_cnt  = 8;
+    optional ip_address serverip     = 9;
+    optional ip_address userip       = 10;
+}
+
+message macauth {
+    optional uint64 start_timestamp  = 1;
+    optional uint64 finish_timestamp = 2;
+    optional mac_address station_mac = 3;
+    optional mac_address bssid       = 4;
+    optional uint32 result            = 5;
+    optional uint32 reason            = 6;
+    optional uint32 server_retry_cnt  = 7;
+    optional ip_address serverip     = 8;
+}
+
+message auth_srvr_timeout {
+    optional uint64 timestamp  = 1;
+    optional mac_address station_mac = 2;
+    optional mac_address bssid       = 3;
+    optional uint32 authtype            = 4;
+    optional uint32 retry_cnt  = 5;
+    optional ip_address userip       = 6;
+    optional ip_address serverip     = 7;
+}
+
+message security_message {
+    enum security_msg_type {
+        AUTH_SRVR_TIMEOUT_MSG = 0;
+        MACAUTH_MSG = 1;
+        CAPTIVE_PORTAL_MSG = 2;
+        WPA_KEY_HANDSHAKE_MSG = 3;
+        DOT1X_MSG = 4;
+        UNKNOWN_MSG = 5;
+    }
+    optional security_msg_type msg_type = 1;
+    optional auth_srvr_timeout auth_srvr_timeout = 2;
+    optional macauth macauth = 3;
+    optional captive_portal captive_portal = 4;
+    optional wpa_key_handshake wpa_key_handshake = 5;
+    optional dot1x dot1x = 6;
+}
+
+// Security related messages END
+
+//Spectrum information
+message spectrum_info
+{
+    optional mac_address ap_mac= 1;
+    optional uint32 radio_number = 2;
+    optional uint32 dev_id = 3;
+    optional uint32 dev_type = 4;
+    optional uint32 low_ch = 5;
+    optional uint32 high_ch = 6;
+    optional uint32 signal = 7;
+    optional uint32 duty_cycle = 8;
+    optional uint32 center_freq = 9;
+    optional uint64 timestamp = 10;
+    optional uint64 active_time = 11;
+}
+
+//General info msg
+message key_value_type {
+    optional string key = 1;
+    optional string value = 2;
+}
+
+message info {
+    enum mode_type {
+        CONTEXT = 0;
+        CONTEXT_AND_LOCATION_WITH_CALIBRATION = 1;
+        CONTEXT_AND_ESTIMATED_LOCATION = 2;
+    }
+    optional mode_type current_mode = 1;
+    optional bool license_valid = 2;
+    repeated key_value_type key_value = 3;
+}
+
+message controller_info {
+    required ip_address controller_ip_address = 1;
+    repeated access_point access_points = 2;
+}
+
+message cluster_info {
+    optional string cluster_key = 1; 
+    optional string cluster_name = 2; 
+    optional string organization = 3; 
+    optional ip_address cluster_ip = 4;
+    repeated access_point access_points = 5;
+}
+
+message topology {        
+    optional controller_info controller = 2;
+    optional cluster_info cluster = 3;
+}
+
+
+// Event message definition
+
+message nb_event {
+        enum event_operation {
+             OP_ADD = 0;
+             OP_UPDATE = 1;
+             OP_DELETE = 2;
+        }
+	enum license_info {
+		hb_Dhak             = 10;
+		hb_LimitOk          = 11;
+		hb_ThresholdXNotice = 20;
+		hb_ThresholdOkNotice= 21;
+		hb_LicenseExceeded  = 31;
+		hb_EvalStarted      = 41;
+		hb_NewLimitExceeded = 51;
+		hb_EvalDone         = 61;
+		hb_ALSOnline        = 71;
+		hb_ALSDieing        = 81;
+		hb_LICENSE_BLOCKED  = 91;
+	}
+        optional uint64 seq = 1;
+        optional uint32 timestamp = 2;
+        optional event_operation op = 3;
+        optional uint64 topic_seq = 4;
+        optional bytes source_id = 5;
+
+	//For now required license_info lic_info = 6 [default=hb_Dhak];
+	optional license_info lic_info = 6 [default=hb_Dhak];
+
+        // One of the following is populated depending on the topic
+        optional location location = 500; 
+        optional presence presence = 501;
+        optional rssi rssi = 502;
+        optional station station = 503;
+        optional radio radio = 505;
+        optional destination destination = 507;
+        optional application application = 509;
+        optional visibility_rec visibility_rec = 510;
+        optional campus campus = 511;
+        optional building building = 512;
+        optional floor floor = 513;
+        optional access_point access_point = 514;
+        optional virtual_access_point virtual_access_point = 515;
+        optional geofence geofence = 516;
+        optional geofence_notify geofence_notify = 517;
+        optional stats_radio stats_radio = 518;
+        optional stats_vap stats_vap = 519;
+        optional stats_station stats_station = 520;
+        optional ap_neighbor_list ap_neighbor_list = 521;
+        optional utilization_stats_radio utilization_stats_radio = 522;
+        optional sta_rssi sta_rssi = 523;
+        optional ap_rssi ap_rssi = 524;
+    	optional proximity proximity = 525;
+        optional webcc_category webcc_category = 526;
+        optional webcc_info webcc_info = 527;
+        optional security_message security_message = 528;
+    	optional spectrum_info spectrum_info = 529;
+    	optional state_station state_station = 530;
+        optional controller_info controller = 531;
+        optional cluster_info cluster = 532;
+}
+
+// Query result set
+message query_response {
+        repeated group Location_result = 10 {
+                 required location msg = 11;
+                 optional uint32 ts = 12;
+        }
+        repeated group Presence_result = 20 {
+                 required presence msg = 21;
+                 optional uint32 ts = 22;
+        }
+        repeated group Rssi_result = 30 {
+                 required rssi msg = 31;
+                 optional uint32 ts = 32;
+        }
+        repeated group Station_result = 40 {
+                 required station msg = 41;
+                 optional uint32 ts = 42;
+        }
+        repeated group Radio_result = 50 {
+                 required radio msg = 51;
+                 optional uint32 ts = 52;
+        }
+        repeated group Destination_result = 60 {
+                 required destination msg = 61;
+                 optional uint32 ts = 62;
+        }
+        repeated group Application_result = 70 {
+                 required application msg = 71;
+                 optional uint32 ts = 72;
+        }
+        repeated group Visibility_rec_result = 80 {
+                 required visibility_rec msg = 81;
+                 optional uint32 ts = 82;
+        }
+        repeated group Campus_result = 90 {
+                 required campus msg = 91;
+                 optional uint32 ts = 92;
+        }
+        repeated group Building_result = 100 {
+                 required building msg = 101;
+                 optional uint32 ts = 102;
+        }
+        repeated group Floor_result = 110 {
+                 required floor msg = 111;
+                 optional uint32 ts = 112;
+        }
+        repeated group Access_point_result = 120 {
+                 required access_point msg = 121;
+                 optional uint32 ts = 122;
+        }
+        repeated group Virtual_access_point_result = 130 {
+                 required virtual_access_point msg = 131;
+                 optional uint32 ts = 132;
+        }
+        repeated group Geofence_result = 140 {
+                 required geofence msg = 141;
+                 optional uint32 ts = 142;
+        }
+        repeated group Proximity_result = 150 {
+                 required proximity msg = 152;
+                 optional uint32 ts = 153;
+	    }
+        repeated group WebCCCategory_result = 160 {
+                 required webcc_category msg = 161;
+                 optional uint32 ts = 162;
+        }
+        optional group Info_result = 170 {
+                 required info msg = 171;
+                 optional uint32 ts = 172;   
+        }
+        repeated group Topology_result = 180 {
+                 required topology msg = 181;                 
+                 optional uint32 ts = 182;
+        }
+        repeated group Controller_result = 190 {
+                 required controller_info msg = 191;
+                 optional uint32 ts = 192;
+        }
+        repeated group Cluster_result = 200 {
+                 required cluster_info msg = 201;
+                 optional uint32 ts = 202;
+        }
+}
