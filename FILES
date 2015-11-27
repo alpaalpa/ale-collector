@@ -1,4 +1,13 @@
+The following is a list of files belonging to this package.  Please check out the file README.md for further documentation.
+
+FILES
 Makefile
 README.md
+ale-playback.py
+ale-record.py
+ale_enums.py
+ale_pprint.py
 feed-reader.cc
+restapi.py
 schema.proto
+schema_pb2.pyc
