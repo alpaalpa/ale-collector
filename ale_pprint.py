@@ -26,7 +26,11 @@ def convert_mac_fmt(bin_mac_addr):
     return(mac)
 
 def convert_ip_fmt(bin_ip_addr):
-    ip = str(".".join("%d" % ord(a) for a in bin_ip_addr))
+    addr_len = len(bin_ip_addr)
+    if addr_len > 8:
+        ip = str(":".join("%x" % ord(a) for a in bin_ip_addr))
+    else:
+        ip = str(".".join("%d" % ord(a) for a in bin_ip_addr))
     return(ip)
     
 def printTab(level):
@@ -97,6 +101,7 @@ def msgToJSON(msg,level=1,topic="",parentAddressIsIP=False):
                 value= '"'+field[1].encode("hex").upper()+'"'
             elif type(field[1]) is str or type(field[1]) is unicode:
                 value = '"'+field[1]+'"'
+                value = value.replace("\\","\\\\")
             else:
                 value = field[1]
 

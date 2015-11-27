@@ -10,4 +10,8 @@ ale_pprint.py
 feed-reader.cc
 restapi.py
 schema.proto
-schema_pb2.pyc
+ale-psql.sql
+config.py
+ale_dbi.py
+ale-collector.py
+oui.py

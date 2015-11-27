@@ -10,8 +10,6 @@ FILES=${PROGFILES} ${SUPPORTFILES} ${LIB} ${DOCS}
 schema_pb2.py:schema.proto
 	/usr/local/bin/protoc --python_out=. schema.proto
 
-run: schema_pb2.py
-
 initdb: ale-psql.sql schema_pb2.py
 	 psql -h ${DBHOST} ${DBNAME} < ale-psql.sql
 
@@ -32,3 +30,7 @@ feed-reader: feed-reader.cc schema.pb.cc schema.pb.h
 schema.pb.cc schema.pb.h: schema.proto
 	/usr/local/bin/protoc --cpp_out=. --python_out=. schema.proto
 
+run: schema_pb2.py
+
+clean:
+	rm *.pyc schema_pb2.py schema.pb.cc schema.pb.h *~
